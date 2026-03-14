@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const arkKey = process.env.ARK_API_KEY
+    const arkKey = process.env.ARK_AKI_KEY
     if (!arkKey) {
       return NextResponse.json(
         { error: '环境变量未配置' },
