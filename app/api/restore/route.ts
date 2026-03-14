@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
           image,
           sequential_image_generation: 'disabled',
           response_format: 'url',
-          size: '3520x4704',
+          size: '1728x2304',
           stream: false,
           watermark: false,
         }),
