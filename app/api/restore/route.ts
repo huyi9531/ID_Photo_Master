@@ -11,11 +11,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const arkKey = process.env.ARK_AKI_KEY
+    if (!arkKey) {
+      return NextResponse.json(
+        { error: '环境变量未配置' },
+        { status: 500 }
+      )
+    }
+
     const response = await fetch('https://ark.cn-beijing.volces.com/api/v3/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer bc38e088-6086-4633-81eb-a68c7b69c7ec',
+        'Authorization': `Bearer ${arkKey}`,
       },
       body: JSON.stringify({
         model: 'doubao-seedream-4-5-251128',
