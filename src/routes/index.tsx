@@ -14,6 +14,7 @@ import {
   clothingColorOptions,
   clothingData,
 } from "@/lib/clothing-data"
+import { useI18n, type Language } from "@/lib/i18n"
 import { assemblePrompt } from "@/lib/prompt"
 import type { BackgroundOption, ClothingItem, OptimizeResult } from "@/types"
 
@@ -88,7 +89,18 @@ function getErrorMessage(value: unknown): string | null {
   return null
 }
 
+function getDisplayError(
+  value: unknown,
+  fallback: string,
+  language: Language,
+): string {
+  if (language === "zh") return fallback
+  return getErrorMessage(value) || fallback
+}
+
 function Home() {
+  const { language } = useI18n()
+  const copy = homeCopy[language]
   const [imageBase64, setImageBase64] = useState<string | null>(null)
   const [background, setBackground] = useState<BackgroundOption>(backgroundOptions[0])
   const [clothing, setClothing] = useState<ClothingItem | null>(null)
@@ -110,11 +122,11 @@ function Home() {
   )
   const selectedSummary = useMemo(
     () => [
-      background.name,
-      clothing?.name ?? "原始服装",
-      clothingColor,
+      getBackgroundLabel(background, language),
+      clothing ? getClothingLabel(clothing, language) : copy.originalClothing,
+      getColorLabel(clothingColor, language),
     ],
-    [background.name, clothing?.name, clothingColor],
+    [background, clothing, clothingColor, copy.originalClothing, language],
   )
 
   const refreshCredits = useCallback(async (token: string) => {
@@ -181,13 +193,13 @@ function Home() {
       })
 
       if (!res.ok) {
-        setError(getErrorMessage(data) || "Unable to start checkout.")
+        setError(getDisplayError(data, copy.errors.checkoutFailed, language))
         return
       }
 
       if (!isCheckoutSuccess(data)) {
         console.error("Checkout API returned an unexpected response", { data })
-        setError("Checkout response was not recognized.")
+        setError(copy.errors.checkoutShape)
         return
       }
 
@@ -196,7 +208,7 @@ function Home() {
       window.location.assign(data.checkoutUrl)
     } catch (requestError: unknown) {
       console.error("Checkout request failed", { requestError })
-      setError("Network error while starting checkout.")
+      setError(copy.errors.checkoutNetwork)
     } finally {
       setIsCreatingCheckout(false)
     }
@@ -206,12 +218,12 @@ function Home() {
     if (!imageBase64 || !background) return
 
     if (!purchaseToken || !hasUsableCredit) {
-      setError("Please buy or complete payment for one photo credit first.")
+      setError(copy.errors.noCredit)
       return
     }
 
     if (!hasUsageConsent) {
-      setError("Please confirm that you own or are authorized to use this photo.")
+      setError(copy.errors.noConsent)
       return
     }
 
@@ -237,14 +249,14 @@ function Home() {
       })
 
       if (!res.ok) {
-        setError(getErrorMessage(data) || "优化失败，请重试")
+        setError(getDisplayError(data, copy.errors.optimizeFailed, language))
         await refreshCredits(purchaseToken)
         return
       }
 
       if (!isOptimizeResult(data)) {
         console.error("Optimize API returned an unexpected response", { data })
-        setError("优化结果格式异常，请重试")
+        setError(copy.errors.optimizeShape)
         await refreshCredits(purchaseToken)
         return
       }
@@ -253,7 +265,7 @@ function Home() {
       await refreshCredits(purchaseToken)
     } catch (requestError: unknown) {
       console.error("Optimize request failed", { requestError })
-      setError("网络错误，请重试")
+      setError(copy.errors.optimizeNetwork)
     } finally {
       setIsOptimizing(false)
     }
@@ -274,13 +286,13 @@ function Home() {
         <header className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="font-body text-[13px] font-semibold text-[#0071E3]">
-              AIConductor PhotoID
+              {copy.eyebrow}
             </p>
             <h1 className="mt-1 max-w-[760px] text-balance font-display text-[32px] font-semibold leading-tight text-[#1d1d1f] sm:text-[40px]">
-              证照优化大师
+              {copy.title}
             </h1>
             <p className="mt-2 max-w-[720px] text-pretty font-body text-[14px] leading-6 text-[#5f6368] sm:text-[15px]">
-              上传正面人像，选择背景和服装风格，生成一张适合证件照用途的排版结果。
+              {copy.description}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -302,6 +314,7 @@ function Home() {
             isOptimizing={isOptimizing}
             onImageReady={setImageBase64}
             onReset={handleReset}
+            copy={copy.preview}
           />
 
           <SetupPanel
@@ -311,6 +324,8 @@ function Home() {
             onBackgroundChange={setBackground}
             onClothingChange={setClothing}
             onClothingColorChange={setClothingColor}
+            copy={copy.setup}
+            language={language}
           />
 
           <CheckoutPanel
@@ -330,6 +345,8 @@ function Home() {
             onReset={handleReset}
             onUsageConsentChange={setHasUsageConsent}
             showReset={Boolean(imageBase64 || resultImageUrl)}
+            copy={copy.checkout}
+            language={language}
           />
         </div>
       </section>
@@ -338,24 +355,24 @@ function Home() {
         <div className="mx-auto grid max-w-[1180px] gap-6 lg:grid-cols-[1fr_1.25fr]">
           <div>
             <p className="font-body text-[13px] font-semibold text-[#0071E3]">
-              Review ready
+              {copy.review.eyebrow}
             </p>
             <h2 className="mt-2 text-balance font-display text-[26px] font-semibold leading-tight text-[#1d1d1f]">
-              Pricing, refunds, and acceptable use are visible before purchase.
+              {copy.review.title}
             </h2>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <InfoPanel
-              title="Pricing"
-              body="$1.00 buys one AI ID photo formatting credit."
+              title={copy.review.pricingTitle}
+              body={copy.review.pricing}
             />
             <InfoPanel
-              title="Refunds"
-              body="Unused credits are refundable within 7 days."
+              title={copy.review.refundsTitle}
+              body={copy.review.refunds}
             />
             <InfoPanel
-              title="Compliance"
-              body="NSFW, deepfake, face swap, impersonation, forged ID, and fraud are blocked."
+              title={copy.review.complianceTitle}
+              body={copy.review.compliance}
             />
           </div>
         </div>
@@ -370,22 +387,24 @@ function PreviewPanel({
   isOptimizing,
   onImageReady,
   onReset,
+  copy,
 }: {
   imageBase64: string | null
   resultImageUrl: string | null
   isOptimizing: boolean
   onImageReady: (base64: string) => void
   onReset: () => void
+  copy: HomeCopy["preview"]
 }) {
   return (
     <section className="overflow-hidden rounded-[24px] bg-[#202124] p-4 shadow-[0_20px_50px_-34px_rgba(0,0,0,0.72)] xl:min-h-[650px]">
       <div className="mb-4 flex items-center justify-between gap-4 px-1">
         <div>
           <h2 className="font-display text-[16px] font-semibold text-white">
-            Preview
+            {copy.title}
           </h2>
           <p className="mt-1 font-body text-[12px] text-white/54">
-            Upload, compare, then download the final result.
+            {copy.description}
           </p>
         </div>
         <span className="rounded-full bg-white/10 px-3 py-1 font-body text-[12px] font-semibold text-white/70">
@@ -401,7 +420,7 @@ function PreviewPanel({
             <div className="relative overflow-hidden rounded-[16px]">
               <img
                 src={imageBase64}
-                alt="正在处理的照片"
+                alt={copy.processingAlt}
                 className="max-h-[430px] w-auto object-contain brightness-75 blur-[2px] transition-[filter] duration-700 outline outline-1 -outline-offset-1 outline-white/10"
                 style={{ aspectRatio: "3/4" }}
               />
@@ -414,10 +433,10 @@ function PreviewPanel({
                 <div className="indeterminate-bar absolute h-full rounded-full bg-[#2997FF]" />
               </div>
               <p className="mt-3 text-center font-body text-[13px] font-semibold text-white">
-                AI 正在优化
+                {copy.optimizing}
               </p>
               <p className="mt-1 text-center font-body text-[12px] text-white/50">
-                预计需要 15-30 秒
+                {copy.eta}
               </p>
             </div>
           </div>
@@ -440,6 +459,8 @@ function SetupPanel({
   onBackgroundChange,
   onClothingChange,
   onClothingColorChange,
+  copy,
+  language,
 }: {
   background: BackgroundOption
   clothing: ClothingItem | null
@@ -447,22 +468,23 @@ function SetupPanel({
   onBackgroundChange: (background: BackgroundOption) => void
   onClothingChange: (clothing: ClothingItem | null) => void
   onClothingColorChange: (color: string) => void
+  copy: HomeCopy["setup"]
+  language: Language
 }) {
   return (
     <section className="rounded-[24px] bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_20px_50px_-36px_rgba(0,0,0,0.4)] xl:min-h-[650px]">
       <div className="mb-6">
         <h2 className="font-display text-[18px] font-semibold text-[#1d1d1f]">
-          Photo setup
+          {copy.title}
         </h2>
         <p className="mt-1 text-pretty font-body text-[13px] leading-5 text-[#6e7176]">
-          These options describe formatting only. The model is instructed to
-          preserve identity features.
+          {copy.description}
         </p>
       </div>
 
       <div className="space-y-7">
         <section>
-          <SectionHeader index="01" title="Background" />
+          <SectionHeader index="01" title={copy.background} />
           <div className="mt-3 grid grid-cols-3 gap-2">
             {backgroundOptions.map((option) => {
               const isSelected = option.id === background.id
@@ -486,7 +508,7 @@ function SetupPanel({
                       isSelected ? "text-[#0071E3]" : "text-[#1d1d1f]"
                     }`}
                   >
-                    {option.name}
+                    {getBackgroundLabel(option, language)}
                   </span>
                 </button>
               )
@@ -495,7 +517,7 @@ function SetupPanel({
         </section>
 
         <section>
-          <SectionHeader index="02" title="Attire color" />
+          <SectionHeader index="02" title={copy.attireColor} />
           <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-8 xl:grid-cols-4 2xl:grid-cols-8">
             {clothingColorOptions.map((option) => {
               const isSelected = clothingColor === option.label
@@ -521,7 +543,7 @@ function SetupPanel({
                       isSelected ? "text-[#0071E3]" : "text-[#5f6368]"
                     }`}
                   >
-                    {option.label}
+                    {getColorLabel(option.label, language)}
                   </span>
                 </button>
               )
@@ -530,26 +552,32 @@ function SetupPanel({
         </section>
 
         <section>
-          <SectionHeader index="03" title="Clothing style" />
+          <SectionHeader index="03" title={copy.clothingStyle} />
           <div className="mt-3 max-h-[310px] space-y-5 overflow-y-auto pr-1">
             <ClothingGroup
-              title="通用"
+              title={copy.groups.unisex}
               items={clothingData.filter((item) => item.gender === "通用")}
               selected={clothing}
               includeOriginal
               onSelect={onClothingChange}
+              language={language}
+              originalLabel={copy.originalClothing}
             />
             <ClothingGroup
-              title="男款"
+              title={copy.groups.men}
               items={clothingData.filter((item) => item.gender === "男")}
               selected={clothing}
               onSelect={onClothingChange}
+              language={language}
+              originalLabel={copy.originalClothing}
             />
             <ClothingGroup
-              title="女款"
+              title={copy.groups.women}
               items={clothingData.filter((item) => item.gender === "女")}
               selected={clothing}
               onSelect={onClothingChange}
+              language={language}
+              originalLabel={copy.originalClothing}
             />
           </div>
         </section>
@@ -575,6 +603,8 @@ function CheckoutPanel({
   onReset,
   onUsageConsentChange,
   showReset,
+  copy,
+  language,
 }: {
   checkoutEmail: string
   creditStatus: CreditStatus | null
@@ -592,7 +622,15 @@ function CheckoutPanel({
   onReset: () => void
   onUsageConsentChange: (checked: boolean) => void
   showReset: boolean
+  copy: HomeCopy["checkout"]
+  language: Language
 }) {
+  const creditStatusLabel = getCreditStatusLabel(
+    creditStatus,
+    isCheckingCredit,
+    language,
+  )
+
   return (
     <aside
       id="pricing"
@@ -601,10 +639,10 @@ function CheckoutPanel({
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="font-display text-[18px] font-semibold text-[#1d1d1f]">
-            Checkout
+            {copy.title}
           </h2>
           <p className="mt-1 font-body text-[13px] text-[#6e7176]">
-            One-time purchase
+            {copy.subtitle}
           </p>
         </div>
         <div className="text-right">
@@ -612,7 +650,7 @@ function CheckoutPanel({
             $1.00
           </p>
           <p className="mt-1 font-body text-[12px] text-[#6e7176]">
-            1 credit
+            {copy.creditUnit}
           </p>
         </div>
       </div>
@@ -632,12 +670,12 @@ function CheckoutPanel({
           </span>
           <div>
             <p className="font-body text-[13px] font-semibold text-[#1d1d1f]">
-              {getCreditStatusLabel(creditStatus, isCheckingCredit)}
+              {creditStatusLabel}
             </p>
             <p className="mt-1 text-pretty font-body text-[12px] leading-5 text-[#6e7176]">
               {hasUsableCredit
-                ? "Your browser has one unused generation credit."
-                : "Buy once, generate one formatted ID photo result."}
+                ? copy.creditReady
+                : copy.creditEmpty}
             </p>
           </div>
         </div>
@@ -646,7 +684,7 @@ function CheckoutPanel({
       <div className="mt-5 space-y-3">
         <label className="block">
           <span className="mb-1.5 block font-body text-[12px] font-semibold text-[#424245]">
-            Receipt email
+            {copy.receiptEmail}
           </span>
           <input
             value={checkoutEmail}
@@ -654,7 +692,7 @@ function CheckoutPanel({
             type="email"
             inputMode="email"
             autoComplete="email"
-            placeholder="Optional"
+            placeholder={copy.optional}
             className="h-11 w-full rounded-[12px] border border-[#d2d2d7] bg-white px-3 font-body text-[14px] text-[#1d1d1f] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#0071E3] focus:shadow-[0_0_0_3px_rgba(0,113,227,0.14)]"
           />
         </label>
@@ -669,7 +707,7 @@ function CheckoutPanel({
           ) : (
             <CreditCard className="h-4 w-4" />
           )}
-          <span>Buy 1 credit</span>
+          <span>{copy.buyButton}</span>
         </button>
       </div>
 
@@ -683,8 +721,7 @@ function CheckoutPanel({
           className="mt-0.5 h-4 w-4 accent-[#0071E3]"
         />
         <span>
-          I own or am authorized to use this photo and will not use it for fraud,
-          face swap, deepfake, NSFW, or impersonation.
+          {copy.consent}
         </span>
       </label>
 
@@ -702,12 +739,12 @@ function CheckoutPanel({
         {isOptimizing ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>优化中</span>
+            <span>{copy.optimizing}</span>
           </>
         ) : (
           <>
             <Sparkles className="h-4 w-4" />
-            <span>Generate photo</span>
+            <span>{copy.generateButton}</span>
           </>
         )}
       </button>
@@ -718,7 +755,7 @@ function CheckoutPanel({
           className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-[12px] bg-white font-body text-[13px] font-semibold text-[#0071E3] shadow-[0_0_0_1px_rgba(0,113,227,0.22)] transition-[background-color,transform] duration-150 hover:bg-[#f3f9ff] active:scale-[0.96]"
         >
           <RotateCcw className="h-4 w-4" />
-          <span>重新开始</span>
+          <span>{copy.reset}</span>
         </button>
       )}
 
@@ -729,13 +766,13 @@ function CheckoutPanel({
       )}
 
       <div className="mt-5 space-y-2 rounded-[16px] bg-[#f5f5f7] p-4">
-        <Requirement checked={hasImage} label="Photo uploaded" />
-        <Requirement checked={hasUsableCredit} label="Unused credit ready" />
-        <Requirement checked={hasUsageConsent} label="Usage confirmed" />
+        <Requirement checked={hasImage} label={copy.requirements.photo} />
+        <Requirement checked={hasUsableCredit} label={copy.requirements.credit} />
+        <Requirement checked={hasUsageConsent} label={copy.requirements.consent} />
       </div>
 
       <p className="mt-4 text-pretty font-body text-[12px] leading-5 text-[#6e7176]">
-        Unused credits are refundable within 7 days. Support:
+        {copy.refundSupport}
         {" "}
         <a className="text-[#0071E3] hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>
           {SUPPORT_EMAIL}
@@ -764,12 +801,16 @@ function ClothingGroup({
   selected,
   includeOriginal = false,
   onSelect,
+  language,
+  originalLabel,
 }: {
   title: string
   items: ClothingItem[]
   selected: ClothingItem | null
   includeOriginal?: boolean
   onSelect: (item: ClothingItem | null) => void
+  language: Language
+  originalLabel: string
 }) {
   return (
     <div>
@@ -780,7 +821,7 @@ function ClothingGroup({
         {includeOriginal && (
           <ClothingButton
             isSelected={selected === null}
-            label="原始服装"
+            label={originalLabel}
             onClick={() => onSelect(null)}
           />
         )}
@@ -788,7 +829,7 @@ function ClothingGroup({
           <ClothingButton
             key={item.id}
             isSelected={selected?.id === item.id}
-            label={item.name}
+            label={getClothingLabel(item, language)}
             onClick={() => onSelect(item)}
           />
         ))}
@@ -847,15 +888,219 @@ function InfoPanel({ title, body }: { title: string; body: string }) {
 function getCreditStatusLabel(
   creditStatus: CreditStatus | null,
   isCheckingCredit: boolean,
+  language: Language,
 ): string {
-  if (isCheckingCredit) return "Checking credit..."
-  if (!creditStatus) return "No active credit"
+  const isChinese = language === "zh"
+
+  if (isCheckingCredit) return isChinese ? "正在检查额度..." : "Checking credit..."
+  if (!creditStatus) return isChinese ? "暂无可用额度" : "No active credit"
   if (creditStatus.status === "paid" && creditStatus.creditsRemaining > 0) {
-    return "Ready: 1 credit available"
+    return isChinese ? "可用：1 次额度" : "Ready: 1 credit available"
   }
-  if (creditStatus.status === "pending") return "Payment pending"
-  if (creditStatus.status === "used") return "Credit used"
-  if (creditStatus.status === "refunded") return "Credit refunded"
-  if (creditStatus.status === "processing") return "Generation in progress"
-  return "No active credit"
+  if (creditStatus.status === "pending") return isChinese ? "付款待确认" : "Payment pending"
+  if (creditStatus.status === "used") return isChinese ? "额度已使用" : "Credit used"
+  if (creditStatus.status === "refunded") return isChinese ? "额度已退款" : "Credit refunded"
+  if (creditStatus.status === "processing") return isChinese ? "正在生成" : "Generation in progress"
+  return isChinese ? "暂无可用额度" : "No active credit"
+}
+
+const homeCopy = {
+  en: {
+    eyebrow: "AIConductor PhotoID",
+    title: "ID photo formatting made simple",
+    description:
+      "Upload a front-facing portrait, choose the background and attire style, and generate one polished ID photo result.",
+    originalClothing: "Original attire",
+    errors: {
+      checkoutFailed: "Unable to start checkout.",
+      checkoutShape: "Checkout response was not recognized.",
+      checkoutNetwork: "Network error while starting checkout.",
+      noCredit: "Please buy or complete payment for one photo credit first.",
+      noConsent: "Please confirm that you own or are authorized to use this photo.",
+      optimizeFailed: "Optimization failed. Please try again.",
+      optimizeShape: "The optimization response was not recognized.",
+      optimizeNetwork: "Network error. Please try again.",
+    },
+    preview: {
+      title: "Preview",
+      description: "Upload, compare, then download the final result.",
+      processingAlt: "Photo being processed",
+      optimizing: "Optimizing photo",
+      eta: "This usually takes 15-30 seconds.",
+    },
+    setup: {
+      title: "Photo setup",
+      description:
+        "These options describe formatting only. The model is instructed to preserve identity features.",
+      background: "Background",
+      attireColor: "Attire color",
+      clothingStyle: "Clothing style",
+      originalClothing: "Original attire",
+      groups: {
+        unisex: "Unisex",
+        men: "Men",
+        women: "Women",
+      },
+    },
+    checkout: {
+      title: "Checkout",
+      subtitle: "One-time purchase",
+      creditUnit: "1 credit",
+      creditReady: "Your browser has one unused generation credit.",
+      creditEmpty: "Buy once, generate one formatted ID photo result.",
+      receiptEmail: "Receipt email",
+      optional: "Optional",
+      buyButton: "Buy 1 credit",
+      consent:
+        "I own or am authorized to use this photo and will not use it for fraud, face swap, deepfake, NSFW, or impersonation.",
+      optimizing: "Optimizing",
+      generateButton: "Generate photo",
+      reset: "Start over",
+      requirements: {
+        photo: "Photo uploaded",
+        credit: "Unused credit ready",
+        consent: "Usage confirmed",
+      },
+      refundSupport: "Unused credits are refundable within 7 days. Support:",
+    },
+    review: {
+      eyebrow: "Review ready",
+      title: "Pricing, refunds, and acceptable use are visible before purchase.",
+      pricingTitle: "Pricing",
+      pricing: "$1.00 buys one AI ID photo formatting credit.",
+      refundsTitle: "Refunds",
+      refunds: "Unused credits are refundable within 7 days.",
+      complianceTitle: "Compliance",
+      compliance:
+        "NSFW, deepfake, face swap, impersonation, forged ID, and fraud are blocked.",
+    },
+  },
+  zh: {
+    eyebrow: "证照优化大师",
+    title: "简单清晰的证件照排版工具",
+    description:
+      "上传正面人像，选择背景和服装风格，生成一张适合证件照用途的排版结果。",
+    originalClothing: "原始服装",
+    errors: {
+      checkoutFailed: "无法启动支付，请重试。",
+      checkoutShape: "支付响应格式异常。",
+      checkoutNetwork: "启动支付时网络错误，请重试。",
+      noCredit: "请先购买或完成 1 次生成额度的付款。",
+      noConsent: "请先确认你拥有或已获授权使用这张照片。",
+      optimizeFailed: "优化失败，请重试。",
+      optimizeShape: "优化结果格式异常，请重试。",
+      optimizeNetwork: "网络错误，请重试。",
+    },
+    preview: {
+      title: "预览",
+      description: "上传、对比，然后下载最终结果。",
+      processingAlt: "正在处理的照片",
+      optimizing: "正在优化照片",
+      eta: "通常需要 15-30 秒。",
+    },
+    setup: {
+      title: "照片设置",
+      description: "这些选项只描述排版风格，模型会保留人物身份特征。",
+      background: "背景颜色",
+      attireColor: "服装颜色",
+      clothingStyle: "服装风格",
+      originalClothing: "原始服装",
+      groups: {
+        unisex: "通用",
+        men: "男款",
+        women: "女款",
+      },
+    },
+    checkout: {
+      title: "购买与生成",
+      subtitle: "一次性购买",
+      creditUnit: "1 次额度",
+      creditReady: "当前浏览器已有 1 次未使用额度。",
+      creditEmpty: "购买一次，即可生成一张证件照排版结果。",
+      receiptEmail: "收据邮箱",
+      optional: "选填",
+      buyButton: "购买 1 次额度",
+      consent:
+        "我拥有或已获授权使用这张照片，且不会将结果用于欺诈、换脸、深度伪造、成人内容或冒充他人。",
+      optimizing: "优化中",
+      generateButton: "生成照片",
+      reset: "重新开始",
+      requirements: {
+        photo: "已上传照片",
+        credit: "已有未使用额度",
+        consent: "已确认使用规则",
+      },
+      refundSupport: "未使用额度 7 天内可退款。客服：",
+    },
+    review: {
+      eyebrow: "审核信息",
+      title: "价格、退款和使用规则在购买前清晰可见。",
+      pricingTitle: "价格",
+      pricing: "$1.00 购买 1 次智能证件照排版额度。",
+      refundsTitle: "退款",
+      refunds: "未使用额度 7 天内可退款。",
+      complianceTitle: "合规",
+      compliance: "成人内容、深度伪造、换脸、冒充他人、伪造证件和欺诈用途都会被拦截。",
+    },
+  },
+} as const
+
+type HomeCopy = (typeof homeCopy)[Language]
+
+const backgroundLabels: Record<string, Record<Language, string>> = {
+  white: { en: "White", zh: "白色" },
+  blue: { en: "Blue", zh: "蓝色" },
+  red: { en: "Red", zh: "红色" },
+}
+
+const colorLabels: Record<string, Record<Language, string>> = {
+  深色: { en: "Dark", zh: "深色" },
+  浅色: { en: "Light", zh: "浅色" },
+  深蓝: { en: "Deep blue", zh: "深蓝" },
+  深灰: { en: "Dark gray", zh: "深灰" },
+  深红: { en: "Deep red", zh: "深红" },
+  藏青: { en: "Navy", zh: "藏青" },
+  驼色: { en: "Camel", zh: "驼色" },
+  墨绿: { en: "Dark green", zh: "墨绿" },
+}
+
+const clothingLabels: Record<string, string> = {
+  "casual-jacket": "Casual jacket",
+  "wool-coat": "Wool coat",
+  "dark-shirt": "Long-sleeve shirt",
+  "dark-sweater": "Mock neck sweater",
+  "tang-suit": "Tang jacket",
+  "sports-jacket": "Sports jacket",
+  crewneck: "Crewneck T-shirt",
+  "suit-tie": "Suit and tie",
+  zhongshan: "Zhongshan suit",
+  polo: "Polo shirt",
+  blazer: "Casual blazer",
+  "vest-shirt": "Vest and shirt",
+  "trench-coat": "Trench coat",
+  "suit-vest": "Suit with bow tie",
+  hoodie: "Hoodie",
+  qipao: "Qipao",
+  "women-suit": "Women's suit",
+  "knit-cardigan": "Knit cardigan",
+  "lace-blouse": "Lace blouse",
+  hanfu: "Hanfu top",
+  "chiffon-blouse": "Chiffon blouse",
+  "dress-suit": "Dress jacket",
+  turtleneck: "Turtleneck sweater",
+}
+
+function getBackgroundLabel(
+  background: BackgroundOption,
+  language: Language,
+): string {
+  return backgroundLabels[background.id]?.[language] ?? background.name
+}
+
+function getColorLabel(color: string, language: Language): string {
+  return colorLabels[color]?.[language] ?? color
+}
+
+function getClothingLabel(clothing: ClothingItem, language: Language): string {
+  return language === "zh" ? clothing.name : clothingLabels[clothing.id] ?? clothing.name
 }

@@ -1,4 +1,5 @@
 import { Download } from "lucide-react"
+import { useI18n } from "@/lib/i18n"
 
 interface ResultDisplayProps {
   resultImageUrl: string | null
@@ -9,6 +10,9 @@ export default function ResultDisplay({
   resultImageUrl,
   isLoading,
 }: ResultDisplayProps) {
+  const { language } = useI18n()
+  const isChinese = language === "zh"
+
   const handleDownload = async () => {
     if (!resultImageUrl) return
     try {
@@ -38,10 +42,10 @@ export default function ResultDisplay({
         </div>
         <div className="text-center">
           <p className="text-white font-body text-[14px] leading-[1.29] tracking-[-0.224px] font-semibold">
-            AI 正在优化
+            {isChinese ? "AI 正在优化" : "Optimizing photo"}
           </p>
           <p className="text-[#cccccc] font-body text-[12px] tracking-[-0.12px] mt-1">
-            预计需要 15-30 秒，请耐心等待
+            {isChinese ? "预计需要 15-30 秒，请耐心等待" : "This usually takes 15-30 seconds."}
           </p>
         </div>
       </div>
@@ -54,7 +58,7 @@ export default function ResultDisplay({
     <div className="flex flex-col items-center gap-5">
       <img
         src={resultImageUrl}
-        alt="优化后的证件照"
+        alt={isChinese ? "优化后的证件照" : "Optimized ID photo"}
         className="max-h-[430px] w-auto rounded-[16px] outline outline-1 -outline-offset-1 outline-white/10 shadow-product"
         style={{ aspectRatio: "3/4", objectFit: "contain" }}
       />
@@ -70,7 +74,7 @@ export default function ResultDisplay({
         "
       >
         <Download className="w-3.5 h-3.5" />
-        下载图片
+        {isChinese ? "下载图片" : "Download"}
       </button>
     </div>
   )

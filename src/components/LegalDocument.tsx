@@ -1,13 +1,15 @@
 interface LegalSection {
   title: string
-  body: string[]
+  body: readonly string[]
 }
 
 interface LegalDocumentProps {
   title: string
   subtitle: string
   updated: string
-  sections: LegalSection[]
+  sections: readonly LegalSection[]
+  backLabel: string
+  updatedLabel: string
 }
 
 export default function LegalDocument({
@@ -15,6 +17,8 @@ export default function LegalDocument({
   subtitle,
   updated,
   sections,
+  backLabel,
+  updatedLabel,
 }: LegalDocumentProps) {
   return (
     <article className="min-h-[calc(100vh-44px)] bg-white px-6 py-12">
@@ -23,11 +27,11 @@ export default function LegalDocument({
           href="/"
           className="text-[#0071E3] font-body text-[14px] hover:underline"
         >
-          Back to AIConductor PhotoID
+          {backLabel}
         </a>
         <header className="mt-8 border-b border-[#e8e8ed] pb-8">
           <p className="text-[#86868b] font-body text-[13px]">
-            Last updated: {updated}
+            {updatedLabel}: {updated}
           </p>
           <h1 className="mt-3 text-[#1d1d1f] font-display text-[38px] font-semibold leading-tight">
             {title}

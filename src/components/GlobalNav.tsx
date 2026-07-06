@@ -1,4 +1,10 @@
+import { Languages } from "lucide-react"
+import { useI18n } from "@/lib/i18n"
+
 export default function GlobalNav() {
+  const { language, toggleLanguage } = useI18n()
+  const isChinese = language === "zh"
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#000000]/80 backdrop-blur-xl h-11 flex items-center px-4">
       <div className="flex w-full items-center justify-between gap-4">
@@ -29,32 +35,38 @@ export default function GlobalNav() {
             />
           </svg>
           <span className="truncate text-white font-display text-[12px] tracking-[-0.12px] font-semibold">
-            AIConductor PhotoID
-          </span>
-          <span className="text-white/40 font-body text-[10px] tracking-[-0.08px] hidden sm:inline">
-            证照优化大师
+            {isChinese ? "证照优化大师" : "AIConductor PhotoID"}
           </span>
         </a>
 
-        <div className="hidden items-center gap-4 sm:flex">
+        <div className="flex items-center gap-3 sm:gap-4">
           <a
             href="/#pricing"
-            className="text-white/70 font-body text-[12px] hover:text-white"
+            className="hidden text-white/70 font-body text-[12px] hover:text-white sm:inline"
           >
-            Pricing
+            {isChinese ? "价格" : "Pricing"}
           </a>
           <a
             href="/acceptable-use"
-            className="text-white/70 font-body text-[12px] hover:text-white"
+            className="hidden text-white/70 font-body text-[12px] hover:text-white sm:inline"
           >
-            AUP
+            {isChinese ? "使用政策" : "AUP"}
           </a>
           <a
             href="mailto:support@aiconductor.top"
-            className="text-white/70 font-body text-[12px] hover:text-white"
+            className="hidden text-white/70 font-body text-[12px] hover:text-white sm:inline"
           >
-            Support
+            {isChinese ? "客服" : "Support"}
           </a>
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/10 px-3 font-body text-[12px] font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.14)] transition-[background-color,transform] duration-150 hover:bg-white/16 active:scale-[0.96]"
+            aria-label={isChinese ? "切换到英文" : "Switch to Chinese"}
+          >
+            <Languages className="h-3.5 w-3.5" />
+            <span>{isChinese ? "EN" : "CN"}</span>
+          </button>
         </div>
       </div>
     </nav>

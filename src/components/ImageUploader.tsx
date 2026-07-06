@@ -1,5 +1,6 @@
 import { useCallback, useState, useRef } from "react"
 import { Upload, X, Loader2 } from "lucide-react"
+import { useI18n } from "@/lib/i18n"
 
 interface ImageUploaderProps {
   imageBase64: string | null
@@ -12,6 +13,8 @@ export default function ImageUploader({
   onImageReady,
   onRemove,
 }: ImageUploaderProps) {
+  const { language } = useI18n()
+  const isChinese = language === "zh"
   const [isDragging, setIsDragging] = useState(false)
   const [isReading, setIsReading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -19,11 +22,11 @@ export default function ImageUploader({
 
   const readFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) {
-      setError("请上传图片文件")
+      setError(isChinese ? "请上传图片文件" : "Please upload an image file.")
       return
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("文件大小不能超过10MB")
+      setError(isChinese ? "文件大小不能超过 10MB" : "File size must be 10MB or smaller.")
       return
     }
 
@@ -38,10 +41,10 @@ export default function ImageUploader({
     }
     reader.onerror = () => {
       setIsReading(false)
-      setError("读取文件失败")
+      setError(isChinese ? "读取文件失败" : "Could not read this file.")
     }
     reader.readAsDataURL(file)
-  }, [onImageReady])
+  }, [isChinese, onImageReady])
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -75,13 +78,13 @@ export default function ImageUploader({
       <div className="relative inline-flex flex-col items-center">
         <img
           src={imageBase64}
-          alt="已上传的照片"
+          alt={isChinese ? "已上传的照片" : "Uploaded photo"}
           className="max-h-[440px] max-w-full rounded-[16px] object-contain outline outline-1 -outline-offset-1 outline-white/10 shadow-product"
         />
         <button
           onClick={onRemove}
           className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/16 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.18)] backdrop-blur-sm transition-transform duration-150 active:scale-[0.96]"
-          aria-label="移除照片"
+          aria-label={isChinese ? "移除照片" : "Remove photo"}
         >
           <X className="h-4 w-4" />
         </button>
@@ -110,7 +113,9 @@ export default function ImageUploader({
         {isReading ? (
           <>
             <Loader2 className="h-8 w-8 animate-spin text-[#2997FF]" />
-            <p className="font-body text-[14px] text-white/66">读取中...</p>
+            <p className="font-body text-[14px] text-white/66">
+              {isChinese ? "读取中..." : "Reading file..."}
+            </p>
           </>
         ) : (
           <>
@@ -119,10 +124,12 @@ export default function ImageUploader({
             </span>
             <div className="text-center">
               <p className="font-body text-[14px] font-semibold text-white">
-                拖拽照片到此处
+                {isChinese ? "拖拽照片到此处" : "Drop your photo here"}
               </p>
               <p className="mt-1 font-body text-[12px] text-white/54">
-                或点击选择（JPG/PNG，≤10MB）
+                {isChinese
+                  ? "或点击选择（JPG/PNG，≤10MB）"
+                  : "or click to choose JPG/PNG, up to 10MB"}
               </p>
             </div>
           </>

@@ -7,6 +7,7 @@ import {
 import type { ReactNode } from "react"
 import Footer from "@/components/Footer"
 import GlobalNav from "@/components/GlobalNav"
+import { I18nProvider } from "@/lib/i18n"
 import globalsCss from "@/styles/globals.css?url"
 
 export const Route = createRootRoute({
@@ -14,7 +15,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AIConductor PhotoID | 证照优化大师" },
+      { title: "AIConductor PhotoID" },
       {
         name: "description",
         content:
@@ -32,18 +33,20 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <RootDocument>
-      <GlobalNav />
-      <main className="pt-11">
-        <Outlet />
-      </main>
-      <Footer />
+      <I18nProvider>
+        <GlobalNav />
+        <main className="pt-11">
+          <Outlet />
+        </main>
+        <Footer />
+      </I18nProvider>
     </RootDocument>
   )
 }
 
 function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
