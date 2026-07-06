@@ -6,7 +6,7 @@
 
 - TanStack Start / TanStack Router
 - React 19 + TypeScript 5
-- Vite 8 + Nitro
+- Vite 8 + Cloudflare Vite Plugin
 - Tailwind CSS 4 + shadcn/ui
 - 火山方舟官方生图 API：`doubao-seedream-4-5-251128`
 
@@ -18,9 +18,24 @@
 ARK_API_KEY=你的火山方舟 API Key
 # 或
 VOLCENGINE_API_KEY=你的火山方舟 API Key
+# 兼容旧部署，也可用
+IMAGE_API_KEY=你的火山方舟 API Key
 ```
 
 密钥只在 `src/lib/seedream.server.ts` 中读取，不会进入客户端 bundle。
+
+部署到 Cloudflare Workers 时，推荐把 `ARK_API_KEY` 设置为 Worker Secret；当前也兼容已有的 `IMAGE_API_KEY`：
+
+```bash
+pnpm wrangler secret put ARK_API_KEY
+```
+
+GitHub Actions 自动部署还需要在 GitHub repository secrets 中配置：
+
+```text
+CLOUDFLARE_ACCOUNT_ID
+CLOUDFLARE_API_TOKEN
+```
 
 ## 快速开始
 
@@ -40,10 +55,11 @@ http://localhost:5000
 ```bash
 pnpm run dev        # 启动 TanStack Start 开发服务器
 pnpm run build      # 构建 Vite + Nitro 产物
-pnpm run start      # 启动 .output/server/index.mjs
+pnpm run start      # 使用 vite preview 预览 Cloudflare Worker 构建
 pnpm run typecheck  # TypeScript 检查
 pnpm run lint:build # ESLint 检查
 pnpm run validate   # 并行运行 typecheck 和 lint
+pnpm run deploy     # 构建并部署到 Cloudflare Workers
 ```
 
 ## 项目结构
@@ -101,3 +117,4 @@ src/
 - 不要手动修改 `src/routeTree.gen.ts`，它由 TanStack Start 自动生成。
 - 服务端密钥、官方 API 调用、文件系统或其他敏感逻辑必须放在 `.server.ts` 或 server route 中。
 - 新增依赖前先全局检索是否已有可复用实现。
+- Cloudflare Worker 名称在 `wrangler.jsonc` 的 `name` 字段中配置；当前为 `id-photo-master`。

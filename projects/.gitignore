@@ -21,6 +21,10 @@ coverage/
 
 # Environment variables
 .env
+.env*
+.dev.vars*
+!.env.example
+!.dev.vars.example
 .env.local
 .env.development.local
 .env.test.local
@@ -98,6 +102,7 @@ Desktop.ini
 # Misc
 .vercel
 .turbo
+.wrangler/
 
 .coze-logs
 .cozeproj/reduction
