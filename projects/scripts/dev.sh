@@ -29,6 +29,6 @@ kill_port_if_listening() {
 
 echo "Clearing port ${PORT} before start."
 kill_port_if_listening
-echo "Starting HTTP service on port ${PORT} for dev..."
+echo "Starting TanStack Start dev server on port ${PORT}..."
 
-PORT=${DEPLOY_RUN_PORT} pnpm tsx watch src/server.ts
+PORT=${DEPLOY_RUN_PORT} DEPLOY_RUN_PORT=${DEPLOY_RUN_PORT} pnpm vite dev --host 0.0.0.0 --port "${DEPLOY_RUN_PORT}"

@@ -24,8 +24,10 @@ export interface OptimizeParams {
   prompt: string
 }
 
-export interface OptimizeResult {
-  success: boolean
-  resultImageUrl?: string
-  error?: string
-}
+export type OptimizeResult =
+  | {
+      resultImageUrl: string
+    }
+  | {
+      error: string
+    }

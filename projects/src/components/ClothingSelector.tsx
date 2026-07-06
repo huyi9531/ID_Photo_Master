@@ -1,5 +1,3 @@
-"use client"
-
 import { clothingData } from "@/lib/clothing-data"
 import type { ClothingItem } from "@/types"
 

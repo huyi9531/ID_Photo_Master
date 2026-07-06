@@ -1,5 +1,3 @@
-"use client"
-
 export default function GlobalNav() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#000000]/80 backdrop-blur-xl h-11 flex items-center px-4">

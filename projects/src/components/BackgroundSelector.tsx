@@ -1,5 +1,3 @@
-"use client"
-
 import { backgroundOptions } from "@/lib/clothing-data"
 import type { BackgroundOption } from "@/types"
 

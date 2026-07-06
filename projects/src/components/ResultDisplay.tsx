@@ -1,5 +1,3 @@
-"use client"
-
 import { Download } from "lucide-react"
 
 interface ResultDisplayProps {
@@ -22,8 +20,11 @@ export default function ResultDisplay({
       link.download = `证照优化_${Date.now()}.jpg`
       link.click()
       window.URL.revokeObjectURL(blobUrl)
-    } catch {
-      // fallback: open in new tab
+    } catch (downloadError: unknown) {
+      console.error("Failed to download generated image", {
+        resultImageUrl,
+        downloadError,
+      })
       window.open(resultImageUrl, "_blank")
     }
   }
