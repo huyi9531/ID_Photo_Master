@@ -1,9 +1,0 @@
-services:
-  id-photo:
-    build: .
-    container_name: id-photo-master
-    ports:
-      - "3000:3000"
-    environment:
-      - IMAGE_API_KEY=${IMAGE_API_KEY}
-    restart: unless-stopped
