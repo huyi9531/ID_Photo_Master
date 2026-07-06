@@ -5,6 +5,7 @@ import {
   createRootRoute,
 } from "@tanstack/react-router"
 import type { ReactNode } from "react"
+import Footer from "@/components/Footer"
 import GlobalNav from "@/components/GlobalNav"
 import globalsCss from "@/styles/globals.css?url"
 
@@ -13,11 +14,11 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "证照优化大师 — AI驱动的专业证件照优化" },
+      { title: "AIConductor PhotoID — 证照优化大师" },
       {
         name: "description",
         content:
-          "上传照片，选择背景色和服装，一键生成高质量证件照。AI驱动，专业品质。",
+          "AIConductor PhotoID formats ID photos with background and attire style optimization while preserving identity features.",
       },
     ],
     links: [
@@ -35,6 +36,7 @@ function RootComponent() {
       <main className="pt-11">
         <Outlet />
       </main>
+      <Footer />
     </RootDocument>
   )
 }

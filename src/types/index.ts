@@ -22,6 +22,7 @@ export interface ClothingColorOption {
 export interface OptimizeParams {
   imageBase64: string
   prompt: string
+  purchaseToken: string
 }
 
 export type OptimizeResult =

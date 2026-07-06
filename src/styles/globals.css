@@ -115,9 +115,15 @@
     @apply bg-background text-foreground font-sans;
     font-size: 17px;
     line-height: 1.47;
-    letter-spacing: -0.374px;
+    letter-spacing: 0;
     color: #1d1d1f;
     background-color: #ffffff;
+  }
+}
+
+@layer components {
+  .footer-link {
+    @apply text-[#0071E3] font-body text-[12px] hover:underline;
   }
 }
 

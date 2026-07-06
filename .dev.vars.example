@@ -1,3 +1,11 @@
 ARK_API_KEY=
 # Optional compatibility fallback for existing deployments.
+VOLCENGINE_API_KEY=
 IMAGE_API_KEY=
+
+# Creem checkout, moderation, and webhook verification.
+CREEM_API_KEY=
+CREEM_WEBHOOK_SECRET=
+CREEM_PRODUCT_ID=
+CREEM_API_BASE=https://test-api.creem.io
+PUBLIC_SITE_URL=http://localhost:5000

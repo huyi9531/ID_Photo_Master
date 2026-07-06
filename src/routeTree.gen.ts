@@ -9,9 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SuccessRouteImport } from './routes/success'
+import { Route as RefundRouteImport } from './routes/refund'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as AcceptableUseRouteImport } from './routes/acceptable-use'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiOptimizeRouteImport } from './routes/api/optimize'
+import { Route as ApiCreditsRouteImport } from './routes/api/credits'
+import { Route as ApiCheckoutRouteImport } from './routes/api/checkout'
+import { Route as ApiWebhooksCreemRouteImport } from './routes/api/webhooks/creem'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuccessRoute = SuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundRoute = RefundRouteImport.update({
+  id: '/refund',
+  path: '/refund',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcceptableUseRoute = AcceptableUseRouteImport.update({
+  id: '/acceptable-use',
+  path: '/acceptable-use',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -22,35 +55,148 @@ const ApiOptimizeRoute = ApiOptimizeRouteImport.update({
   path: '/api/optimize',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCreditsRoute = ApiCreditsRouteImport.update({
+  id: '/api/credits',
+  path: '/api/credits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCheckoutRoute = ApiCheckoutRouteImport.update({
+  id: '/api/checkout',
+  path: '/api/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksCreemRoute = ApiWebhooksCreemRouteImport.update({
+  id: '/api/webhooks/creem',
+  path: '/api/webhooks/creem',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/acceptable-use': typeof AcceptableUseRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
+  '/success': typeof SuccessRoute
+  '/terms': typeof TermsRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/credits': typeof ApiCreditsRoute
   '/api/optimize': typeof ApiOptimizeRoute
+  '/api/webhooks/creem': typeof ApiWebhooksCreemRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/acceptable-use': typeof AcceptableUseRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
+  '/success': typeof SuccessRoute
+  '/terms': typeof TermsRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/credits': typeof ApiCreditsRoute
   '/api/optimize': typeof ApiOptimizeRoute
+  '/api/webhooks/creem': typeof ApiWebhooksCreemRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/acceptable-use': typeof AcceptableUseRoute
+  '/privacy': typeof PrivacyRoute
+  '/refund': typeof RefundRoute
+  '/success': typeof SuccessRoute
+  '/terms': typeof TermsRoute
+  '/api/checkout': typeof ApiCheckoutRoute
+  '/api/credits': typeof ApiCreditsRoute
   '/api/optimize': typeof ApiOptimizeRoute
+  '/api/webhooks/creem': typeof ApiWebhooksCreemRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/optimize'
+  fullPaths:
+    | '/'
+    | '/acceptable-use'
+    | '/privacy'
+    | '/refund'
+    | '/success'
+    | '/terms'
+    | '/api/checkout'
+    | '/api/credits'
+    | '/api/optimize'
+    | '/api/webhooks/creem'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/optimize'
-  id: '__root__' | '/' | '/api/optimize'
+  to:
+    | '/'
+    | '/acceptable-use'
+    | '/privacy'
+    | '/refund'
+    | '/success'
+    | '/terms'
+    | '/api/checkout'
+    | '/api/credits'
+    | '/api/optimize'
+    | '/api/webhooks/creem'
+  id:
+    | '__root__'
+    | '/'
+    | '/acceptable-use'
+    | '/privacy'
+    | '/refund'
+    | '/success'
+    | '/terms'
+    | '/api/checkout'
+    | '/api/credits'
+    | '/api/optimize'
+    | '/api/webhooks/creem'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcceptableUseRoute: typeof AcceptableUseRoute
+  PrivacyRoute: typeof PrivacyRoute
+  RefundRoute: typeof RefundRoute
+  SuccessRoute: typeof SuccessRoute
+  TermsRoute: typeof TermsRoute
+  ApiCheckoutRoute: typeof ApiCheckoutRoute
+  ApiCreditsRoute: typeof ApiCreditsRoute
   ApiOptimizeRoute: typeof ApiOptimizeRoute
+  ApiWebhooksCreemRoute: typeof ApiWebhooksCreemRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/success': {
+      id: '/success'
+      path: '/success'
+      fullPath: '/success'
+      preLoaderRoute: typeof SuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund': {
+      id: '/refund'
+      path: '/refund'
+      fullPath: '/refund'
+      preLoaderRoute: typeof RefundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acceptable-use': {
+      id: '/acceptable-use'
+      path: '/acceptable-use'
+      fullPath: '/acceptable-use'
+      preLoaderRoute: typeof AcceptableUseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,12 +211,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOptimizeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/credits': {
+      id: '/api/credits'
+      path: '/api/credits'
+      fullPath: '/api/credits'
+      preLoaderRoute: typeof ApiCreditsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/checkout': {
+      id: '/api/checkout'
+      path: '/api/checkout'
+      fullPath: '/api/checkout'
+      preLoaderRoute: typeof ApiCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/creem': {
+      id: '/api/webhooks/creem'
+      path: '/api/webhooks/creem'
+      fullPath: '/api/webhooks/creem'
+      preLoaderRoute: typeof ApiWebhooksCreemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcceptableUseRoute: AcceptableUseRoute,
+  PrivacyRoute: PrivacyRoute,
+  RefundRoute: RefundRoute,
+  SuccessRoute: SuccessRoute,
+  TermsRoute: TermsRoute,
+  ApiCheckoutRoute: ApiCheckoutRoute,
+  ApiCreditsRoute: ApiCreditsRoute,
   ApiOptimizeRoute: ApiOptimizeRoute,
+  ApiWebhooksCreemRoute: ApiWebhooksCreemRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
