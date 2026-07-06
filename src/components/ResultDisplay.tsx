@@ -55,7 +55,7 @@ export default function ResultDisplay({
       <img
         src={resultImageUrl}
         alt="优化后的证件照"
-        className="max-h-[calc(100vh-260px)] w-auto rounded-lg shadow-product"
+        className="max-h-[430px] w-auto rounded-[16px] outline outline-1 -outline-offset-1 outline-white/10 shadow-product"
         style={{ aspectRatio: "3/4", objectFit: "contain" }}
       />
       <button
@@ -63,10 +63,10 @@ export default function ResultDisplay({
         className="
           inline-flex items-center gap-2
           bg-[#2997FF] text-white
-          px-5 py-2.5 rounded-[9999px]
-          font-body text-[14px]
-          active:scale-95 transition-transform duration-150
-          cursor-pointer hover:brightness-110
+          px-5 py-2.5 rounded-[12px]
+          font-body text-[14px] font-semibold
+          active:scale-[0.96] transition-[filter,transform] duration-150
+          hover:brightness-110
         "
       >
         <Download className="w-3.5 h-3.5" />

@@ -76,49 +76,52 @@ export default function ImageUploader({
         <img
           src={imageBase64}
           alt="已上传的照片"
-          className="max-h-[calc(100vh-220px)] max-w-full rounded-lg object-contain shadow-product"
+          className="max-h-[440px] max-w-full rounded-[16px] object-contain outline outline-1 -outline-offset-1 outline-white/10 shadow-product"
         />
         <button
           onClick={onRemove}
-          className="absolute -top-2 -right-2 w-7 h-7 bg-[rgba(210,210,215,0.64)] text-white rounded-full flex items-center justify-center active:scale-95 transition-transform cursor-pointer backdrop-blur-sm"
+          className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/16 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.18)] backdrop-blur-sm transition-transform duration-150 active:scale-[0.96]"
+          aria-label="移除照片"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="h-4 w-4" />
         </button>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-xs mx-auto">
+    <div className="mx-auto w-full max-w-sm">
       <div
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={`
-          relative border border-dashed rounded-lg p-12
+          relative rounded-[18px] border border-dashed px-6 py-12
           flex flex-col items-center justify-center gap-4
-          transition-all duration-200 cursor-pointer
+          cursor-pointer transition-[border-color,background-color,opacity] duration-150
           ${
             isDragging
-              ? "border-[#2997FF] bg-[#2997FF]/5"
-              : "border-[#cccccc]/30 hover:border-[#2997FF]/50"
+              ? "border-[#2997FF] bg-[#2997FF]/8"
+              : "border-white/18 bg-white/[0.03] hover:border-[#2997FF]/55"
           }
           ${isReading ? "pointer-events-none opacity-60" : ""}
         `}
       >
         {isReading ? (
           <>
-            <Loader2 className="w-8 h-8 text-[#2997FF] animate-spin" />
-            <p className="text-[#cccccc] font-body text-[14px]">读取中...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-[#2997FF]" />
+            <p className="font-body text-[14px] text-white/66">读取中...</p>
           </>
         ) : (
           <>
-            <Upload className="w-8 h-8 text-[#cccccc]" />
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/8">
+              <Upload className="h-6 w-6 text-white/70" />
+            </span>
             <div className="text-center">
-              <p className="text-white font-body text-[14px] font-semibold">
+              <p className="font-body text-[14px] font-semibold text-white">
                 拖拽照片到此处
               </p>
-              <p className="text-[#cccccc] font-body text-[12px] mt-1">
+              <p className="mt-1 font-body text-[12px] text-white/54">
                 或点击选择（JPG/PNG，≤10MB）
               </p>
             </div>
@@ -134,7 +137,7 @@ export default function ImageUploader({
         />
       </div>
       {error && (
-        <p className="text-red-400 font-body text-[12px] mt-2 text-center">
+        <p className="mt-2 text-center font-body text-[12px] text-red-300">
           {error}
         </p>
       )}

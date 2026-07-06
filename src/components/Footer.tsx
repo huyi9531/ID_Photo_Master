@@ -7,8 +7,8 @@ export default function Footer() {
             <p className="text-[#1d1d1f] font-body text-[13px] font-semibold">
               AIConductor PhotoID
             </p>
-            <p className="text-[#7a7a7a] font-body text-[12px] tracking-[-0.12px] mt-2">
-              证照优化大师 — ID photo formatting and style optimization.
+            <p className="text-[#7a7a7a] font-body text-[12px] tracking-[0] mt-2">
+              证照优化大师 | ID photo formatting and style optimization.
             </p>
             <a
               href="mailto:support@aiconductor.top"
@@ -33,7 +33,7 @@ export default function Footer() {
             </a>
           </div>
         </div>
-        <p className="text-[#7a7a7a] font-body text-[12px] tracking-[-0.12px] mt-8">
+        <p className="text-[#7a7a7a] font-body text-[12px] tracking-[0] mt-8">
           © {new Date().getFullYear()} AIConductor PhotoID. All rights reserved.
         </p>
       </div>

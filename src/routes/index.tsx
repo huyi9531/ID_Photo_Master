@@ -1,11 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { CheckCircle2, CreditCard, Loader2, ShieldCheck } from "lucide-react"
-import { useCallback, useEffect, useState } from "react"
-import BackgroundSelector from "@/components/BackgroundSelector"
-import ClothingSelector from "@/components/ClothingSelector"
+import {
+  CheckCircle2,
+  CreditCard,
+  Loader2,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import ImageUploader from "@/components/ImageUploader"
 import ResultDisplay from "@/components/ResultDisplay"
-import { backgroundOptions, clothingColorOptions } from "@/lib/clothing-data"
+import {
+  backgroundOptions,
+  clothingColorOptions,
+  clothingData,
+} from "@/lib/clothing-data"
 import { assemblePrompt } from "@/lib/prompt"
 import type { BackgroundOption, ClothingItem, OptimizeResult } from "@/types"
 
@@ -99,6 +107,14 @@ function Home() {
     creditStatus?.status === "paid" && creditStatus.creditsRemaining > 0
   const canOptimize = Boolean(
     imageBase64 && background && !isOptimizing && hasUsableCredit && hasUsageConsent,
+  )
+  const selectedSummary = useMemo(
+    () => [
+      background.name,
+      clothing?.name ?? "原始服装",
+      clothingColor,
+    ],
+    [background.name, clothing?.name, clothingColor],
   )
 
   const refreshCredits = useCallback(async (token: string) => {
@@ -253,257 +269,577 @@ function Home() {
   }
 
   return (
-    <div className="bg-white">
-      <section className="min-h-[calc(100vh-44px)] flex flex-col lg:flex-row">
-        <div className="lg:w-[42%] min-h-[440px] bg-[#272729] flex flex-col items-center justify-center p-6 sm:p-10 relative overflow-hidden">
-          {resultImageUrl && !isOptimizing ? (
-            <ResultDisplay resultImageUrl={resultImageUrl} isLoading={false} />
-          ) : isOptimizing && imageBase64 ? (
-            <div className="relative w-full flex flex-col items-center justify-center">
-              <div className="relative rounded-lg overflow-hidden shadow-product">
-                <img
-                  src={imageBase64}
-                  alt="正在处理的照片"
-                  className="max-h-[calc(100vh-280px)] w-auto object-contain blur-[2px] brightness-75 transition-all duration-700"
-                  style={{ aspectRatio: "3/4" }}
-                />
-                <div className="absolute inset-0 bg-black/30 backdrop-blur-[3px] rounded-lg" />
-                <div className="scan-line-anim absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#2997FF] to-transparent shadow-[0_0_12px_2px_rgba(41,151,255,0.5)]" />
-              </div>
+    <div className="bg-[#f5f5f7]">
+      <section className="mx-auto min-h-[calc(100dvh-44px)] max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
+        <header className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="font-body text-[13px] font-semibold text-[#0071E3]">
+              AIConductor PhotoID
+            </p>
+            <h1 className="mt-1 max-w-[760px] text-balance font-display text-[32px] font-semibold leading-tight text-[#1d1d1f] sm:text-[40px]">
+              证照优化大师
+            </h1>
+            <p className="mt-2 max-w-[720px] text-pretty font-body text-[14px] leading-6 text-[#5f6368] sm:text-[15px]">
+              上传正面人像，选择背景和服装风格，生成一张适合证件照用途的排版结果。
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {selectedSummary.map((item) => (
+              <span
+                key={item}
+                className="rounded-full bg-white px-3 py-1.5 font-body text-[12px] font-semibold text-[#424245] shadow-[0_0_0_1px_rgba(0,0,0,0.06)]"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </header>
 
-              <div className="mt-6 w-64 flex flex-col items-center gap-3">
-                <div className="relative w-full h-[3px] bg-white/10 rounded-full overflow-hidden">
-                  <div className="indeterminate-bar absolute h-full bg-gradient-to-r from-[#2997FF] via-[#5cb8ff] to-[#2997FF] rounded-full" />
-                </div>
-                <div className="text-center">
-                  <p className="text-white font-body text-[14px] font-semibold tracking-[-0.224px]">
-                    AI 正在优化
-                  </p>
-                  <p className="text-white/50 font-body text-[12px] tracking-[-0.12px] mt-1">
-                    预计需要 15-30 秒，请耐心等待
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <ImageUploader
-              imageBase64={imageBase64}
-              onImageReady={setImageBase64}
-              onRemove={handleReset}
+        <div className="grid gap-5 xl:grid-cols-[minmax(360px,0.95fr)_minmax(390px,1.05fr)_340px]">
+          <PreviewPanel
+            imageBase64={imageBase64}
+            resultImageUrl={resultImageUrl}
+            isOptimizing={isOptimizing}
+            onImageReady={setImageBase64}
+            onReset={handleReset}
+          />
+
+          <SetupPanel
+            background={background}
+            clothing={clothing}
+            clothingColor={clothingColor}
+            onBackgroundChange={setBackground}
+            onClothingChange={setClothing}
+            onClothingColorChange={setClothingColor}
+          />
+
+          <CheckoutPanel
+            checkoutEmail={checkoutEmail}
+            creditStatus={creditStatus}
+            error={error}
+            hasImage={Boolean(imageBase64)}
+            hasUsageConsent={hasUsageConsent}
+            hasUsableCredit={hasUsableCredit}
+            isCheckingCredit={isCheckingCredit}
+            isCreatingCheckout={isCreatingCheckout}
+            isOptimizing={isOptimizing}
+            canOptimize={canOptimize}
+            onCheckout={handleCheckout}
+            onEmailChange={setCheckoutEmail}
+            onOptimize={handleOptimize}
+            onReset={handleReset}
+            onUsageConsentChange={setHasUsageConsent}
+            showReset={Boolean(imageBase64 || resultImageUrl)}
+          />
+        </div>
+      </section>
+
+      <section className="border-t border-black/[0.06] bg-white px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-[1180px] gap-6 lg:grid-cols-[1fr_1.25fr]">
+          <div>
+            <p className="font-body text-[13px] font-semibold text-[#0071E3]">
+              Review ready
+            </p>
+            <h2 className="mt-2 text-balance font-display text-[26px] font-semibold leading-tight text-[#1d1d1f]">
+              Pricing, refunds, and acceptable use are visible before purchase.
+            </h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <InfoPanel
+              title="Pricing"
+              body="$1.00 buys one AI ID photo formatting credit."
             />
-          )}
+            <InfoPanel
+              title="Refunds"
+              body="Unused credits are refundable within 7 days."
+            />
+            <InfoPanel
+              title="Compliance"
+              body="NSFW, deepfake, face swap, impersonation, forged ID, and fraud are blocked."
+            />
+          </div>
         </div>
+      </section>
+    </div>
+  )
+}
 
-        <div className="lg:w-[58%] bg-white flex flex-col px-6 sm:px-10 pt-6 pb-8 overflow-y-auto">
-          <div className="flex flex-col xl:flex-row gap-7 xl:gap-10 mb-7">
-            <div className="flex-1">
-              <BackgroundSelector selected={background} onSelect={setBackground} />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-[#1d1d1f] font-display text-[21px] leading-[1.19] tracking-[0.231px] font-semibold mb-4">
-                服装颜色
-              </h3>
-              <div className="flex items-center gap-3 flex-wrap">
-                {clothingColorOptions.map((cc) => {
-                  const isSelected = clothingColor === cc.label
-                  return (
-                    <button
-                      key={cc.id}
-                      onClick={() => setClothingColor(cc.label)}
-                      className="group flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition-all duration-150"
-                    >
-                      <div
-                        className={`
-                          w-9 h-9 rounded-full transition-all duration-200
-                          ${
-                            isSelected
-                              ? "ring-[3px] ring-[#0071E3] ring-offset-2 ring-offset-white scale-110"
-                              : "ring-1 ring-black/[0.08] hover:ring-black/20 hover:scale-105"
-                          }
-                          ${cc.needsBorder ? "border border-black/10" : ""}
-                        `}
-                        style={{ backgroundColor: cc.displayColor }}
-                      />
-                      <span
-                        className={`
-                          font-body text-[12px] leading-[1.33] tracking-[-0.12px] transition-colors duration-150
-                          ${isSelected ? "text-[#0071E3] font-semibold" : "text-[#7a7a7a]"}
-                        `}
-                      >
-                        {cc.label}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
+function PreviewPanel({
+  imageBase64,
+  resultImageUrl,
+  isOptimizing,
+  onImageReady,
+  onReset,
+}: {
+  imageBase64: string | null
+  resultImageUrl: string | null
+  isOptimizing: boolean
+  onImageReady: (base64: string) => void
+  onReset: () => void
+}) {
+  return (
+    <section className="overflow-hidden rounded-[24px] bg-[#202124] p-4 shadow-[0_20px_50px_-34px_rgba(0,0,0,0.72)] xl:min-h-[650px]">
+      <div className="mb-4 flex items-center justify-between gap-4 px-1">
+        <div>
+          <h2 className="font-display text-[16px] font-semibold text-white">
+            Preview
+          </h2>
+          <p className="mt-1 font-body text-[12px] text-white/54">
+            Upload, compare, then download the final result.
+          </p>
+        </div>
+        <span className="rounded-full bg-white/10 px-3 py-1 font-body text-[12px] font-semibold text-white/70">
+          3:4
+        </span>
+      </div>
 
-          <div className="mb-7">
-            <ClothingSelector selected={clothing} onSelect={setClothing} />
-          </div>
-
-          <div className="border-t border-[#f0f0f0] my-2" />
-
-          <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,340px)]">
-            <div className="flex flex-col gap-4">
-              <label className="flex items-start gap-3 text-[#424245] font-body text-[13px] leading-5">
-                <input
-                  type="checkbox"
-                  checked={hasUsageConsent}
-                  onChange={(event) => setHasUsageConsent(event.target.checked)}
-                  className="mt-1 h-4 w-4 accent-[#0071E3]"
-                />
-                <span>
-                  I own or am authorized to use this photo, and I will not use the
-                  result for fraud, face swap, deepfake, NSFW, or impersonation.
-                  <span className="block text-[#86868b]">
-                    我确认拥有照片使用权，并遵守可接受使用政策。
-                  </span>
-                </span>
-              </label>
-
-              <div className="flex items-center gap-4 flex-wrap">
-                <button
-                  onClick={handleOptimize}
-                  disabled={!canOptimize && !isOptimizing}
-                  className={`
-                    relative inline-flex items-center justify-center gap-2
-                    px-8 py-3 rounded-[9999px]
-                    font-body text-[18px] font-light
-                    transition-all duration-300 cursor-pointer overflow-hidden
-                    ${
-                      isOptimizing
-                        ? "bg-[#0071E3] text-white"
-                        : canOptimize
-                          ? "bg-[#0071E3] text-white active:scale-95 hover:bg-[#0077ED]"
-                          : "bg-[#f5f5f7] text-[#7a7a7a] cursor-not-allowed"
-                    }
-                  `}
-                >
-                  {isOptimizing ? (
-                    <>
-                      <Loader2 className="w-[18px] h-[18px] animate-spin" />
-                      <span>优化中</span>
-                      <span className="btn-shimmer" />
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-[18px] h-[18px]" />
-                      <span>开始优化</span>
-                    </>
-                  )}
-                </button>
-
-                {(imageBase64 || resultImageUrl) && !isOptimizing && (
-                  <button
-                    onClick={handleReset}
-                    className="text-[#0071E3] font-body text-[14px] hover:underline cursor-pointer transition-colors"
-                  >
-                    重新开始
-                  </button>
-                )}
-              </div>
+      <div className="flex min-h-[520px] items-center justify-center rounded-[18px] bg-[#17181a] p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.07)]">
+        {resultImageUrl && !isOptimizing ? (
+          <ResultDisplay resultImageUrl={resultImageUrl} isLoading={false} />
+        ) : isOptimizing && imageBase64 ? (
+          <div className="relative flex w-full flex-col items-center justify-center">
+            <div className="relative overflow-hidden rounded-[16px]">
+              <img
+                src={imageBase64}
+                alt="正在处理的照片"
+                className="max-h-[430px] w-auto object-contain brightness-75 blur-[2px] transition-[filter] duration-700 outline outline-1 -outline-offset-1 outline-white/10"
+                style={{ aspectRatio: "3/4" }}
+              />
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-[3px]" />
+              <div className="scan-line-anim absolute left-0 right-0 h-[2px] bg-[#2997FF] shadow-[0_0_12px_2px_rgba(41,151,255,0.5)]" />
             </div>
 
-            <aside
-              id="pricing"
-              className="border border-[#e8e8ed] rounded-lg p-4 bg-[#fbfbfd]"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[#1d1d1f] font-display text-[13px] font-semibold">
-                    AIConductor PhotoID
-                  </p>
-                  <p className="text-[#86868b] font-body text-[12px] mt-1">
-                    Single photo credit
-                  </p>
-                </div>
-                <p className="text-[#1d1d1f] font-display text-[22px] font-semibold">
-                  $1.00
-                </p>
+            <div className="mt-6 w-64">
+              <div className="relative h-[3px] w-full overflow-hidden rounded-full bg-white/10">
+                <div className="indeterminate-bar absolute h-full rounded-full bg-[#2997FF]" />
               </div>
-
-              <div className="mt-4 rounded-md bg-white border border-[#e8e8ed] p-3">
-                <p className="text-[#1d1d1f] font-body text-[13px] font-semibold">
-                  {getCreditStatusLabel(creditStatus, isCheckingCredit)}
-                </p>
-                <p className="text-[#86868b] font-body text-[12px] mt-1">
-                  {hasUsableCredit
-                    ? "1 unused generation is ready on this browser."
-                    : "Buy once, generate one ID photo formatting result."}
-                </p>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-3">
-                <input
-                  value={checkoutEmail}
-                  onChange={(event) => setCheckoutEmail(event.target.value)}
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  placeholder="Email for receipt (optional)"
-                  className="h-10 rounded-md border border-[#d2d2d7] px-3 font-body text-[13px] outline-none focus:border-[#0071E3]"
-                />
-                <button
-                  onClick={handleCheckout}
-                  disabled={isCreatingCheckout}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#1d1d1f] px-4 text-white font-body text-[14px] font-semibold hover:bg-[#2f2f32] disabled:cursor-not-allowed disabled:bg-[#b7b7bd]"
-                >
-                  {isCreatingCheckout ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <CreditCard className="w-4 h-4" />
-                  )}
-                  <span>Buy 1 credit</span>
-                </button>
-              </div>
-
-              <p className="mt-3 text-[#86868b] font-body text-[12px] leading-5">
-                Unused credits are refundable within 7 days. Support:
-                {" "}
-                <a className="text-[#0071E3] hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>
-                  {SUPPORT_EMAIL}
-                </a>
+              <p className="mt-3 text-center font-body text-[13px] font-semibold text-white">
+                AI 正在优化
               </p>
-            </aside>
+              <p className="mt-1 text-center font-body text-[12px] text-white/50">
+                预计需要 15-30 秒
+              </p>
+            </div>
           </div>
+        ) : (
+          <ImageUploader
+            imageBase64={imageBase64}
+            onImageReady={onImageReady}
+            onRemove={onReset}
+          />
+        )}
+      </div>
+    </section>
+  )
+}
 
-          {error && (
-            <p className="text-red-500 font-body text-[14px] mt-3">{error}</p>
+function SetupPanel({
+  background,
+  clothing,
+  clothingColor,
+  onBackgroundChange,
+  onClothingChange,
+  onClothingColorChange,
+}: {
+  background: BackgroundOption
+  clothing: ClothingItem | null
+  clothingColor: string
+  onBackgroundChange: (background: BackgroundOption) => void
+  onClothingChange: (clothing: ClothingItem | null) => void
+  onClothingColorChange: (color: string) => void
+}) {
+  return (
+    <section className="rounded-[24px] bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_20px_50px_-36px_rgba(0,0,0,0.4)] xl:min-h-[650px]">
+      <div className="mb-6">
+        <h2 className="font-display text-[18px] font-semibold text-[#1d1d1f]">
+          Photo setup
+        </h2>
+        <p className="mt-1 text-pretty font-body text-[13px] leading-5 text-[#6e7176]">
+          These options describe formatting only. The model is instructed to
+          preserve identity features.
+        </p>
+      </div>
+
+      <div className="space-y-7">
+        <section>
+          <SectionHeader index="01" title="Background" />
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {backgroundOptions.map((option) => {
+              const isSelected = option.id === background.id
+
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => onBackgroundChange(option)}
+                  className={`min-h-24 rounded-[14px] p-3 text-left transition-[box-shadow,transform,background-color] duration-150 ease-out active:scale-[0.96] ${
+                    isSelected
+                      ? "bg-[#eef6ff] shadow-[0_0_0_2px_#0071E3]"
+                      : "bg-[#f5f5f7] shadow-[0_0_0_1px_rgba(0,0,0,0.06)] hover:shadow-[0_0_0_1px_rgba(0,113,227,0.45)]"
+                  }`}
+                >
+                  <span
+                    className="block h-9 rounded-[10px] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]"
+                    style={{ backgroundColor: option.color }}
+                  />
+                  <span
+                    className={`mt-3 block font-body text-[13px] font-semibold ${
+                      isSelected ? "text-[#0071E3]" : "text-[#1d1d1f]"
+                    }`}
+                  >
+                    {option.name}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section>
+          <SectionHeader index="02" title="Attire color" />
+          <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-8 xl:grid-cols-4 2xl:grid-cols-8">
+            {clothingColorOptions.map((option) => {
+              const isSelected = clothingColor === option.label
+
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => onClothingColorChange(option.label)}
+                  className={`flex min-h-20 flex-col items-center justify-center rounded-[14px] p-2 transition-[box-shadow,transform,background-color] duration-150 ease-out active:scale-[0.96] ${
+                    isSelected
+                      ? "bg-[#eef6ff] shadow-[0_0_0_2px_#0071E3]"
+                      : "bg-[#f5f5f7] shadow-[0_0_0_1px_rgba(0,0,0,0.06)] hover:shadow-[0_0_0_1px_rgba(0,113,227,0.45)]"
+                  }`}
+                >
+                  <span
+                    className={`h-7 w-7 rounded-full ${
+                      option.needsBorder ? "shadow-[0_0_0_1px_rgba(0,0,0,0.14)]" : ""
+                    }`}
+                    style={{ backgroundColor: option.displayColor }}
+                  />
+                  <span
+                    className={`mt-2 font-body text-[12px] font-semibold ${
+                      isSelected ? "text-[#0071E3]" : "text-[#5f6368]"
+                    }`}
+                  >
+                    {option.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <section>
+          <SectionHeader index="03" title="Clothing style" />
+          <div className="mt-3 max-h-[310px] space-y-5 overflow-y-auto pr-1">
+            <ClothingGroup
+              title="通用"
+              items={clothingData.filter((item) => item.gender === "通用")}
+              selected={clothing}
+              includeOriginal
+              onSelect={onClothingChange}
+            />
+            <ClothingGroup
+              title="男款"
+              items={clothingData.filter((item) => item.gender === "男")}
+              selected={clothing}
+              onSelect={onClothingChange}
+            />
+            <ClothingGroup
+              title="女款"
+              items={clothingData.filter((item) => item.gender === "女")}
+              selected={clothing}
+              onSelect={onClothingChange}
+            />
+          </div>
+        </section>
+      </div>
+    </section>
+  )
+}
+
+function CheckoutPanel({
+  checkoutEmail,
+  creditStatus,
+  error,
+  hasImage,
+  hasUsageConsent,
+  hasUsableCredit,
+  isCheckingCredit,
+  isCreatingCheckout,
+  isOptimizing,
+  canOptimize,
+  onCheckout,
+  onEmailChange,
+  onOptimize,
+  onReset,
+  onUsageConsentChange,
+  showReset,
+}: {
+  checkoutEmail: string
+  creditStatus: CreditStatus | null
+  error: string | null
+  hasImage: boolean
+  hasUsageConsent: boolean
+  hasUsableCredit: boolean
+  isCheckingCredit: boolean
+  isCreatingCheckout: boolean
+  isOptimizing: boolean
+  canOptimize: boolean
+  onCheckout: () => void
+  onEmailChange: (email: string) => void
+  onOptimize: () => void
+  onReset: () => void
+  onUsageConsentChange: (checked: boolean) => void
+  showReset: boolean
+}) {
+  return (
+    <aside
+      id="pricing"
+      className="rounded-[24px] bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_20px_50px_-36px_rgba(0,0,0,0.4)] xl:sticky xl:top-16 xl:min-h-[650px] xl:self-start"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-display text-[18px] font-semibold text-[#1d1d1f]">
+            Checkout
+          </h2>
+          <p className="mt-1 font-body text-[13px] text-[#6e7176]">
+            One-time purchase
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="font-display text-[28px] font-semibold leading-none text-[#1d1d1f] tabular-nums">
+            $1.00
+          </p>
+          <p className="mt-1 font-body text-[12px] text-[#6e7176]">
+            1 credit
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-[16px] bg-[#f5f5f7] p-4">
+        <div className="flex items-start gap-3">
+          <span
+            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
+              hasUsableCredit ? "bg-[#e7f7ee] text-[#14783e]" : "bg-white text-[#6e7176]"
+            }`}
+          >
+            {isCheckingCredit ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4" />
+            )}
+          </span>
+          <div>
+            <p className="font-body text-[13px] font-semibold text-[#1d1d1f]">
+              {getCreditStatusLabel(creditStatus, isCheckingCredit)}
+            </p>
+            <p className="mt-1 text-pretty font-body text-[12px] leading-5 text-[#6e7176]">
+              {hasUsableCredit
+                ? "Your browser has one unused generation credit."
+                : "Buy once, generate one formatted ID photo result."}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-3">
+        <label className="block">
+          <span className="mb-1.5 block font-body text-[12px] font-semibold text-[#424245]">
+            Receipt email
+          </span>
+          <input
+            value={checkoutEmail}
+            onChange={(event) => onEmailChange(event.target.value)}
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="Optional"
+            className="h-11 w-full rounded-[12px] border border-[#d2d2d7] bg-white px-3 font-body text-[14px] text-[#1d1d1f] outline-none transition-[border-color,box-shadow] duration-150 focus:border-[#0071E3] focus:shadow-[0_0_0_3px_rgba(0,113,227,0.14)]"
+          />
+        </label>
+
+        <button
+          onClick={onCheckout}
+          disabled={isCreatingCheckout}
+          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-[#1d1d1f] px-4 font-body text-[14px] font-semibold text-white transition-[background-color,transform] duration-150 hover:bg-[#2f2f32] active:scale-[0.96] disabled:cursor-not-allowed disabled:bg-[#b7b7bd]"
+        >
+          {isCreatingCheckout ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <CreditCard className="h-4 w-4" />
           )}
+          <span>Buy 1 credit</span>
+        </button>
+      </div>
 
-          <p className="text-[#7a7a7a] font-body text-[12px] tracking-[-0.12px] mt-auto pt-6">
-            ID photo formatting with background and attire style optimization. We
-            do not change identity features, swap faces, or create another person.
-          </p>
-        </div>
-      </section>
+      <div className="my-5 h-px bg-black/[0.06]" />
 
-      <section className="bg-[#f5f5f7] px-6 py-12">
-        <div className="mx-auto grid max-w-[980px] gap-5 md:grid-cols-3">
-          <InfoPanel
-            title="Pricing"
-            body="$1.00 buys one AI ID photo formatting credit. Each paid credit can generate one result."
+      <label className="flex items-start gap-3 rounded-[16px] bg-[#f5f5f7] p-4 font-body text-[13px] leading-5 text-[#424245]">
+        <input
+          type="checkbox"
+          checked={hasUsageConsent}
+          onChange={(event) => onUsageConsentChange(event.target.checked)}
+          className="mt-0.5 h-4 w-4 accent-[#0071E3]"
+        />
+        <span>
+          I own or am authorized to use this photo and will not use it for fraud,
+          face swap, deepfake, NSFW, or impersonation.
+        </span>
+      </label>
+
+      <button
+        onClick={onOptimize}
+        disabled={!canOptimize && !isOptimizing}
+        className={`mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-[14px] px-4 font-body text-[15px] font-semibold transition-[background-color,transform,color] duration-150 active:scale-[0.96] ${
+          isOptimizing
+            ? "bg-[#0071E3] text-white"
+            : canOptimize
+              ? "bg-[#0071E3] text-white hover:bg-[#0077ED]"
+              : "cursor-not-allowed bg-[#e8e8ed] text-[#86868b]"
+        }`}
+      >
+        {isOptimizing ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>优化中</span>
+          </>
+        ) : (
+          <>
+            <Sparkles className="h-4 w-4" />
+            <span>Generate photo</span>
+          </>
+        )}
+      </button>
+
+      {showReset && !isOptimizing && (
+        <button
+          onClick={onReset}
+          className="mt-3 inline-flex h-10 w-full items-center justify-center gap-2 rounded-[12px] bg-white font-body text-[13px] font-semibold text-[#0071E3] shadow-[0_0_0_1px_rgba(0,113,227,0.22)] transition-[background-color,transform] duration-150 hover:bg-[#f3f9ff] active:scale-[0.96]"
+        >
+          <RotateCcw className="h-4 w-4" />
+          <span>重新开始</span>
+        </button>
+      )}
+
+      {error && (
+        <p className="mt-4 rounded-[12px] bg-[#fff1f1] p-3 font-body text-[13px] leading-5 text-[#c21b1b]">
+          {error}
+        </p>
+      )}
+
+      <div className="mt-5 space-y-2 rounded-[16px] bg-[#f5f5f7] p-4">
+        <Requirement checked={hasImage} label="Photo uploaded" />
+        <Requirement checked={hasUsableCredit} label="Unused credit ready" />
+        <Requirement checked={hasUsageConsent} label="Usage confirmed" />
+      </div>
+
+      <p className="mt-4 text-pretty font-body text-[12px] leading-5 text-[#6e7176]">
+        Unused credits are refundable within 7 days. Support:
+        {" "}
+        <a className="text-[#0071E3] hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>
+          {SUPPORT_EMAIL}
+        </a>
+      </p>
+    </aside>
+  )
+}
+
+function SectionHeader({ index, title }: { index: string; title: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#eef6ff] font-body text-[12px] font-semibold text-[#0071E3] tabular-nums">
+        {index}
+      </span>
+      <h3 className="font-display text-[15px] font-semibold text-[#1d1d1f]">
+        {title}
+      </h3>
+    </div>
+  )
+}
+
+function ClothingGroup({
+  title,
+  items,
+  selected,
+  includeOriginal = false,
+  onSelect,
+}: {
+  title: string
+  items: ClothingItem[]
+  selected: ClothingItem | null
+  includeOriginal?: boolean
+  onSelect: (item: ClothingItem | null) => void
+}) {
+  return (
+    <div>
+      <p className="mb-2 font-body text-[12px] font-semibold text-[#86868b]">
+        {title}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {includeOriginal && (
+          <ClothingButton
+            isSelected={selected === null}
+            label="原始服装"
+            onClick={() => onSelect(null)}
           />
-          <InfoPanel
-            title="Refunds"
-            body="Unused credits can be refunded within 7 days by contacting support@aiconductor.top."
+        )}
+        {items.map((item) => (
+          <ClothingButton
+            key={item.id}
+            isSelected={selected?.id === item.id}
+            label={item.name}
+            onClick={() => onSelect(item)}
           />
-          <InfoPanel
-            title="Compliance"
-            body="Requests for NSFW, deepfake, face swap, impersonation, third-party unauthorized photos, forged ID, or fraud are blocked."
-          />
-        </div>
-        <div className="mx-auto mt-6 flex max-w-[980px] items-start gap-3 rounded-lg border border-[#e8e8ed] bg-white p-4">
-          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#0071E3]" />
-          <p className="text-[#424245] font-body text-[13px] leading-6">
-            AIConductor PhotoID optimizes ID photo background and attire styling for
-            photos you own or are authorized to use. It is not a government ID
-            issuance service and must not be used to misrepresent identity.
-          </p>
-        </div>
-      </section>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ClothingButton({
+  isSelected,
+  label,
+  onClick,
+}: {
+  isSelected: boolean
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`min-h-11 rounded-[12px] px-3 py-2 text-left font-body text-[13px] font-semibold transition-[box-shadow,transform,background-color,color] duration-150 active:scale-[0.96] ${
+        isSelected
+          ? "bg-[#eef6ff] text-[#0071E3] shadow-[0_0_0_2px_#0071E3]"
+          : "bg-[#f5f5f7] text-[#424245] shadow-[0_0_0_1px_rgba(0,0,0,0.06)] hover:shadow-[0_0_0_1px_rgba(0,113,227,0.45)]"
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function Requirement({ checked, label }: { checked: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2 font-body text-[12px] text-[#424245]">
+      <CheckCircle2
+        className={`h-4 w-4 ${checked ? "text-[#14783e]" : "text-[#b7b7bd]"}`}
+      />
+      <span>{label}</span>
+    </div>
+  )
+}
+
+function InfoPanel({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-[16px] bg-[#f5f5f7] p-4">
+      <h3 className="font-display text-[15px] font-semibold text-[#1d1d1f]">
+        {title}
+      </h3>
+      <p className="mt-2 text-pretty font-body text-[13px] leading-5 text-[#5f6368]">
+        {body}
+      </p>
     </div>
   )
 }
@@ -522,15 +858,4 @@ function getCreditStatusLabel(
   if (creditStatus.status === "refunded") return "Credit refunded"
   if (creditStatus.status === "processing") return "Generation in progress"
   return "No active credit"
-}
-
-function InfoPanel({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-lg border border-[#e8e8ed] bg-white p-5">
-      <h2 className="text-[#1d1d1f] font-display text-[17px] font-semibold">
-        {title}
-      </h2>
-      <p className="mt-3 text-[#424245] font-body text-[13px] leading-6">{body}</p>
-    </div>
-  )
 }

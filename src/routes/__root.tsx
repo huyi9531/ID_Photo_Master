@@ -14,7 +14,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AIConductor PhotoID — 证照优化大师" },
+      { title: "AIConductor PhotoID | 证照优化大师" },
       {
         name: "description",
         content:
